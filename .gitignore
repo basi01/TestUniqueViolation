@@ -1,0 +1,41 @@
+/resources/javaagent/byte-buddy-agent.jar
+
+# Idea and its java version file
+.idea
+java-version
+# VSCode
+.vscode
+# https://community.mendix.com/link/space/app-development/questions/141059
+/theme-cache/web/theme.compiled.css
+/theme-cache/web/theme.compiled.css.map
+
+# https://community.mendix.com/link/space/deployment/questions/131326
+vendorlib-sbom.json
+#
+# Eclipse settings
+/.settings
+/*.launch
+/deployment/
+/packages/
+/releases/
+/.mendix-cache/
+/.classpath
+/.project
+/*.mpr.bak
+/*.mpr.lock
+/modeler-merge-marker
+/project-settings.user.json
+/javasource/*/proxies/
+/javasource/system/
+/**/node_modules/
+!/javascriptsource/**/node_modules/
+/nativemobile/builds/
+/vendorlib/temp/
+
+.DS_Store
+/.svn/
+*.bak
+/mprcontents/mprjournal*
+.~lock.*#
+/testuniqueviolation.mpr.bak
+/testuniqueviolation.mpr.lock
