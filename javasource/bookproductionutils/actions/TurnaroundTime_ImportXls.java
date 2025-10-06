@@ -21,7 +21,6 @@ import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -34,7 +33,6 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-
 import com.mendix.core.Core;
 import com.mendix.core.CoreException;
 import com.mendix.systemwideinterfaces.core.IContext;
@@ -42,10 +40,8 @@ import com.mendix.systemwideinterfaces.core.IMendixObject;
 import com.mendix.systemwideinterfaces.core.UserAction;
 import com.mendix.systemwideinterfaces.core.UserException;
 import com.mendix.systemwideinterfaces.core.UserException.ExceptionCategory;
-
 import _sysutils.impl.LambdaUtil.BiFunctionWithExceptions;
 import avatarclient.proxies.LVAItem;
-import avatarclient.proxies.va_copyediting_category;
 import avatarclient.proxies.va_production_schedule_task;
 import bookproductionutils.proxies.TurnaroundTimeItem;
 import bookproductionutils.proxies.TurnaroundTimeX;
@@ -58,8 +54,8 @@ public class TurnaroundTime_ImportXls extends UserAction<java.util.List<IMendixO
 	private final system.proxies.FileDocument excelFile;
 
 	public TurnaroundTime_ImportXls(
-		final IContext context,
-		final IMendixObject _excelFile
+		IContext context,
+		IMendixObject _excelFile
 	)
 	{
 		super(context);
@@ -106,9 +102,6 @@ public class TurnaroundTime_ImportXls extends UserAction<java.util.List<IMendixO
             final Map<String, va_production_schedule_task> tasksByCode =
                 loadVA(va_production_schedule_task::load);
 
-            final Map<String, va_copyediting_category> copyEdsByCode =
-                loadVA(va_copyediting_category::load);
-
             prodCatsByIndex = LinkedHashMap.newLinkedHashMap(prodCatIndexes.size());
             for (final Integer prodCatColIndex : prodCatIndexes) {
                 final Cell cell = row.getCell(prodCatColIndex);
@@ -128,11 +121,11 @@ public class TurnaroundTime_ImportXls extends UserAction<java.util.List<IMendixO
             while (it.hasNext()) {
                 row = it.next();
                 final va_production_schedule_task task = getTask(tasksByCode);
-                final List<va_copyediting_category> copyEds = getCopyEds(copyEdsByCode);
-                if (task != null && copyEds != null) {
+                final String copyEds2 = getCopyEds2();
+                if (task != null && copyEds2 != null) {
                     final TurnaroundTimeX turnaroundTime = new TurnaroundTimeX(context);
                     turnaroundTime.setTurnaroundTimeX_va_production_schedule_task(task);
-                    turnaroundTime.setTurnaroundTimeX_va_copyediting_category(copyEds);
+                    turnaroundTime.setPrettyCopyEds(copyEds2);
                     createItems(turnaroundTime);
                     toCommit.add(turnaroundTime.getMendixObject());
                     mCell = null;
@@ -214,38 +207,11 @@ public class TurnaroundTime_ImportXls extends UserAction<java.util.List<IMendixO
         return task;
     }
 
-    private List<va_copyediting_category> getCopyEds(
-            final Map<String, va_copyediting_category> copyEdsByCode) throws Exception {
+    private String getCopyEds2() throws Exception {
         final Cell cellCopyEds = getCell(COL_COPYEDITINGCATEGORY);
         final String sCopyEds = str1(cellCopyEds);
-        List<va_copyediting_category> copyEds = null;
-        if (!sCopyEds.isEmpty()) {
-            copyEds = new ArrayList<>();
-            if (!"*".equals(sCopyEds)) {
-                for (String sCopyEditingCategory : sCopyEds.split(",")) {
-                    sCopyEditingCategory = sCopyEditingCategory.trim();
-                    if (!sCopyEditingCategory.startsWith("CE")) {
-                        throw new UserException(
-                            ExceptionCategory.Custom,
-                            "Cell " + cellCopyEds.getAddress()
-                                + " contains a comma-separated list element not starting with 'CE': "
-                                + sCopyEditingCategory);
-                    }
-                    final String code = sCopyEditingCategory.substring("CE".length());
-                    final va_copyediting_category copyEd =
-                        copyEdsByCode.get(code);
-                    if (copyEd == null) {
-                        throw new UserException(
-                            ExceptionCategory.Custom,
-                            "Cell " + cellCopyEds.getAddress() + " contains unknown "
-                                + va_copyediting_category.entityName + " code: " + code);
-                    }
-                    copyEds.add(copyEd);
-                }
-            }
-        }
         mCell = null;
-        return copyEds;
+        return sCopyEds.isEmpty() ? null : sCopyEds;
     }
 
     private void createItems(final TurnaroundTimeX turnaroundTime) throws Exception {
