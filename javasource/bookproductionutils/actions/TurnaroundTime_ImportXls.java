@@ -17,6 +17,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -263,7 +264,7 @@ public class TurnaroundTime_ImportXls extends UserAction<java.util.List<IMendixO
             final va_production_category prodCat = pair.getValue();
             final TurnaroundTimeItem turnaroundTimeItem = new TurnaroundTimeItem(context);
             turnaroundTimeItem.setNumberOfDays(number);
-            turnaroundTimeItem.setTurnaroundTimeItem_va_production_category(prodCat);
+            turnaroundTimeItem.setAttribute(prodCat.getCode());
             turnaroundTimeItem.setTurnaroundTimeItem_TurnaroundTimeX(turnaroundTime);
         }
     }
