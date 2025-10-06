@@ -21,6 +21,7 @@ import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -33,6 +34,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
 import com.mendix.core.Core;
 import com.mendix.core.CoreException;
 import com.mendix.systemwideinterfaces.core.IContext;
@@ -40,10 +42,10 @@ import com.mendix.systemwideinterfaces.core.IMendixObject;
 import com.mendix.systemwideinterfaces.core.UserAction;
 import com.mendix.systemwideinterfaces.core.UserException;
 import com.mendix.systemwideinterfaces.core.UserException.ExceptionCategory;
+
 import _sysutils.impl.LambdaUtil.BiFunctionWithExceptions;
 import avatarclient.proxies.LVAItem;
 import avatarclient.proxies.va_copyediting_category;
-import avatarclient.proxies.va_production_category;
 import avatarclient.proxies.va_production_schedule_task;
 import bookproductionutils.proxies.TurnaroundTimeItem;
 import bookproductionutils.proxies.TurnaroundTimeX;
@@ -56,8 +58,8 @@ public class TurnaroundTime_ImportXls extends UserAction<java.util.List<IMendixO
 	private final system.proxies.FileDocument excelFile;
 
 	public TurnaroundTime_ImportXls(
-		IContext context,
-		IMendixObject _excelFile
+		final IContext context,
+		final IMendixObject _excelFile
 	)
 	{
 		super(context);
@@ -107,15 +109,19 @@ public class TurnaroundTime_ImportXls extends UserAction<java.util.List<IMendixO
             final Map<String, va_copyediting_category> copyEdsByCode =
                 loadVA(va_copyediting_category::load);
 
-            final Map<String, va_production_category> prodCatsByCode =
-                loadVA(va_production_category::load);
-
             prodCatsByIndex = LinkedHashMap.newLinkedHashMap(prodCatIndexes.size());
             for (final Integer prodCatColIndex : prodCatIndexes) {
                 final Cell cell = row.getCell(prodCatColIndex);
-                final va_production_category prodCat =
-                    getVA(cell, prodCatsByCode, va_production_category.entityName, false);
-                prodCatsByIndex.put(prodCatColIndex, prodCat);
+                final String code = str1(cell);
+
+                if (prodCatsByIndex.containsValue(code)) {
+                    throw new UserException(
+                        ExceptionCategory.Custom,
+                        "Cell " + cell.getAddress() + " contains the same " + "prodcat"
+                            + " code as one of the previous cells: " + code);
+                }
+
+                prodCatsByIndex.put(prodCatColIndex, code);
             }
 
             final List<IMendixObject> toCommit = new ArrayList<>();
@@ -159,7 +165,7 @@ public class TurnaroundTime_ImportXls extends UserAction<java.util.List<IMendixO
 
     private Map<String, List<Integer>> firstHeader;
 
-    private Map<Integer, va_production_category> prodCatsByIndex;
+    private Map<Integer, String> prodCatsByIndex;
 
     private Map<String, List<Integer>> secondHeader;
 
@@ -195,12 +201,6 @@ public class TurnaroundTime_ImportXls extends UserAction<java.util.List<IMendixO
             throw new UserException(
                 ExceptionCategory.Custom,
                 "Cell " + cell.getAddress() + " contains unknown " + entityname + " code: " + code);
-        }
-        if (prodCatsByIndex.containsValue(va)) {
-            throw new UserException(
-                ExceptionCategory.Custom,
-                "Cell " + cell.getAddress() + " contains the same " + entityname
-                    + " code as one of the previous cells: " + code);
         }
         return va;
     }
@@ -261,10 +261,10 @@ public class TurnaroundTime_ImportXls extends UserAction<java.util.List<IMendixO
                     ExceptionCategory.Custom,
                     "Cell " + cell.getAddress() + " contains invalid number of days: " + sNumber);
             }
-            final va_production_category prodCat = pair.getValue();
+            final String prodCat = pair.getValue();
             final TurnaroundTimeItem turnaroundTimeItem = new TurnaroundTimeItem(context);
             turnaroundTimeItem.setNumberOfDays(number);
-            turnaroundTimeItem.setAttribute(prodCat.getCode());
+            turnaroundTimeItem.setAttribute(prodCat);
             turnaroundTimeItem.setTurnaroundTimeItem_TurnaroundTimeX(turnaroundTime);
         }
     }
