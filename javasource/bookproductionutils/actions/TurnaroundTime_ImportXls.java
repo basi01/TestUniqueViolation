@@ -14,6 +14,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -41,7 +42,9 @@ import com.mendix.systemwideinterfaces.core.UserException.ExceptionCategory;
 import _sysutils.impl.LambdaUtil.BiFunctionWithExceptions;
 import avatarclient.proxies.LVAItem;
 import avatarclient.proxies.va_copyediting_category;
+import avatarclient.proxies.va_production_category;
 import avatarclient.proxies.va_production_schedule_task;
+import bookproductionutils.proxies.TurnaroundTimeItem;
 import bookproductionutils.proxies.TurnaroundTimeX;
 
 public class TurnaroundTime_ImportXls extends UserAction<java.util.List<IMendixObject>>
@@ -103,6 +106,17 @@ public class TurnaroundTime_ImportXls extends UserAction<java.util.List<IMendixO
             final Map<String, va_copyediting_category> copyEdsByCode =
                 loadVA(va_copyediting_category::load);
 
+            final Map<String, va_production_category> prodCatsByCode =
+                loadVA(va_production_category::load);
+
+            prodCatsByIndex = LinkedHashMap.newLinkedHashMap(prodCatIndexes.size());
+            for (final Integer prodCatColIndex : prodCatIndexes) {
+                final Cell cell = row.getCell(prodCatColIndex);
+                final va_production_category prodCat =
+                    getVA(cell, prodCatsByCode, va_production_category.entityName, false);
+                prodCatsByIndex.put(prodCatColIndex, prodCat);
+            }
+
             final List<IMendixObject> toCommit = new ArrayList<>();
             while (it.hasNext()) {
                 row = it.next();
@@ -112,6 +126,7 @@ public class TurnaroundTime_ImportXls extends UserAction<java.util.List<IMendixO
                     final TurnaroundTimeX turnaroundTime = new TurnaroundTimeX(context);
                     turnaroundTime.setTurnaroundTimeX_va_production_schedule_task(task);
                     turnaroundTime.setTurnaroundTimeX_va_copyediting_category(copyEds);
+                    createItems(turnaroundTime);
                     toCommit.add(turnaroundTime.getMendixObject());
                     mCell = null;
                 }
@@ -142,6 +157,8 @@ public class TurnaroundTime_ImportXls extends UserAction<java.util.List<IMendixO
     private static final DataFormatter DATA_FORMATTER = new DataFormatter();
 
     private Map<String, List<Integer>> firstHeader;
+
+    private Map<Integer, va_production_category> prodCatsByIndex;
 
     private Map<String, List<Integer>> secondHeader;
 
@@ -177,6 +194,12 @@ public class TurnaroundTime_ImportXls extends UserAction<java.util.List<IMendixO
             throw new UserException(
                 ExceptionCategory.Custom,
                 "Cell " + cell.getAddress() + " contains unknown " + entityname + " code: " + code);
+        }
+        if (prodCatsByIndex.containsValue(va)) {
+            throw new UserException(
+                ExceptionCategory.Custom,
+                "Cell " + cell.getAddress() + " contains the same " + entityname
+                    + " code as one of the previous cells: " + code);
         }
         return va;
     }
@@ -222,6 +245,27 @@ public class TurnaroundTime_ImportXls extends UserAction<java.util.List<IMendixO
         }
         mCell = null;
         return copyEds;
+    }
+
+    private void createItems(final TurnaroundTimeX turnaroundTime) throws Exception {
+        for (final var pair : prodCatsByIndex.entrySet()) {
+            final Integer prodCatColIndex = pair.getKey();
+            final Cell cell = row.getCell(prodCatColIndex);
+            final String sNumber = str1(cell);
+            Integer number;
+            try {
+                number = Integer.parseInt(sNumber);
+            } catch (final NumberFormatException e) {
+                throw new UserException(
+                    ExceptionCategory.Custom,
+                    "Cell " + cell.getAddress() + " contains invalid number of days: " + sNumber);
+            }
+            final va_production_category prodCat = pair.getValue();
+            final TurnaroundTimeItem turnaroundTimeItem = new TurnaroundTimeItem(context);
+            turnaroundTimeItem.setNumberOfDays(number);
+            turnaroundTimeItem.setTurnaroundTimeItem_va_production_category(prodCat);
+            turnaroundTimeItem.setTurnaroundTimeItem_TurnaroundTimeX(turnaroundTime);
+        }
     }
 
     private static <T> T requireNonNull(final T obj, final Supplier<String> messageSupplier) {
