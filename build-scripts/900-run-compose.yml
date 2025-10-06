@@ -1,7 +1,5 @@
 # Usage: docker compose -f 900-run-compose.yml up
 
-version: "3.9"
-
 services:
   postgres:
     image: postgres:latest
@@ -29,6 +27,11 @@ services:
       - "4080:8080"
     networks:
       - testuniqueviolation-net
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/"]
+      interval: 5s
+      timeout: 2s
+      retries: 50
 
   app1:
     image: testuniqueviolation-app
@@ -43,6 +46,44 @@ services:
       - "4081:8080"
     networks:
       - testuniqueviolation-net
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/"]
+      interval: 5s
+      timeout: 2s
+      retries: 50
+
+  proxy:
+    image: alpine/socat
+    container_name: testuniqueviolation-portproxy
+    stdin_open: true      # allows interactive input
+    tty: true             # allocates a pseudo-TTY
+    entrypoint: ["/bin/sh"]
+    command:
+      - "-c"
+      - >-
+        echo 'Interactive proxy ready. You can launch http://localhost:4078 in your browser.';
+        echo 'Use `docker attach testuniqueviolation-portproxy` to gain control';
+        set -ex -o pipefail;
+        setsid socat tcp-listen:8080,fork,reuseaddr tcp-connect:app0:8080 &
+        read -n 1 -s -r -p"press any key to switch" x;
+        echo;
+        kill -KILL -$!;
+        wait || true;
+        echo 'Switching to app1';
+        setsid socat tcp-listen:8080,fork,reuseaddr tcp-connect:app1:8080 &
+        read -n 1 -s -r -p"press any key to exit" x;
+        echo;
+        kill -KILL -$!;
+        wait || true;
+    ports:
+      - "4078:8080"
+    networks:
+      - testuniqueviolation-net
+    depends_on:
+      app0:
+        condition: service_healthy
+      app1:
+        condition: service_healthy
 
 networks:
   testuniqueviolation-net:
