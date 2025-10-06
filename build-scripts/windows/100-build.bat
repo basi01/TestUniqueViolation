@@ -1,7 +1,8 @@
 setlocal
 @set "PROMPT=.\>"
 
-pushd %~dp0..\zzz-internal || exit /b 1
+set ERRORLEVEL2=1
+pushd %~dp0..\zzz-internal || goto :err
 
 @rem We expect that only a working docker executable is available. The docker daemon can be in WSL or even on a remote host.
 @rem A builder image with Git and Python necessary to run the build-mda-dir task will be used.
@@ -12,9 +13,23 @@ pushd %~dp0..\zzz-internal || exit /b 1
 @rem  
 
 set ERRORLEVEL2=0
-call docker compose -f 100-build-with-compose.yml up --build || set ERRORLEVEL2=%ERRORLEVEL%
+call :do_it || set ERRORLEVEL2=%ERRORLEVEL%
+
+@rem final clean (this resets ERRORLEVEL)
 call docker compose -f 100-build-with-compose.yml down --rmi local || echo. >nul
+
+:err
+echo exiting with %ERRORLEVEL2%
 pause
-exit /b %ERRORLEVEL%
+exit /b %ERRORLEVEL2%
+
+@rem xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+:do_it
+@rem do not reuse existing :temp image
+call docker compose -f 100-build-with-compose.yml down --rmi local || goto :ennd
+@rem build
+call docker compose -f 100-build-with-compose.yml up --build || goto :ennd
+goto :ennd
+@rem xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 :ennd
