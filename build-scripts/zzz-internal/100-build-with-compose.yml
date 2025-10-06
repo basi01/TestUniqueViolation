@@ -12,7 +12,8 @@ services:
     entrypoint: /bin/bash
     command: ["/workdir/src/build-scripts/zzz-internal/500-build-mda-dir.sh"]
     environment:
-      APP_TAG: testuniqueviolation-app
+      - APP_TAG=testuniqueviolation-app
+      - BUILDKIT_PROGRESS=$BUILDKIT_PROGRESS
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     working_dir: /workdir

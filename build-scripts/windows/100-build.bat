@@ -25,6 +25,7 @@ exit /b %ERRORLEVEL2%
 
 @rem xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 :do_it
+set BUILDKIT_PROGRESS=plain
 @rem do not reuse existing :temp image
 call docker compose -f 100-build-with-compose.yml down --rmi local || goto :ennd
 @rem build
