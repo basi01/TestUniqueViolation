@@ -1,0 +1,49 @@
+# Usage: docker compose -f 900-run-compose.yml up
+
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: testuniqueviolation-postgres
+    environment:
+      POSTGRES_DB: testuniqueviolation
+      POSTGRES_USER: testuniqueviolation
+      POSTGRES_PASSWORD: testuniqueviolation
+    ports:
+      - "4079:5432"
+    mem_limit: 2g
+    networks:
+      - testuniqueviolation-net
+
+  app0:
+    image: testuniqueviolation-app
+    container_name: testuniqueviolation-app-0
+    depends_on:
+      - postgres
+    environment:
+      CF_INSTANCE_INDEX: 0
+      ADMIN_PASSWORD: n0t-A-s3cRet
+      DATABASE_ENDPOINT: postgres://testuniqueviolation:testuniqueviolation@postgres/testuniqueviolation
+    ports:
+      - "4080:8080"
+    networks:
+      - testuniqueviolation-net
+
+  app1:
+    image: testuniqueviolation-app
+    container_name: testuniqueviolation-app-1
+    depends_on:
+      - postgres
+    environment:
+      CF_INSTANCE_INDEX: 1
+      ADMIN_PASSWORD: n0t-A-s3cRet
+      DATABASE_ENDPOINT: postgres://testuniqueviolation:testuniqueviolation@postgres/testuniqueviolation
+    ports:
+      - "4081:8080"
+    networks:
+      - testuniqueviolation-net
+
+networks:
+  testuniqueviolation-net:
+    driver: bridge
