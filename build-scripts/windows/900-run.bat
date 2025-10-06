@@ -1,4 +1,5 @@
 setlocal
+@set "PROMPT=.\>"
 
 @rem run optional goto command:
 %*
@@ -34,6 +35,5 @@ call docker compose -f 900-run-compose.yml logs -f
 pause
 goto :ennd
 @rem xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-
 
 :ennd

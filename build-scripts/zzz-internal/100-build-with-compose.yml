@@ -1,0 +1,20 @@
+# Usage:
+#   docker compose -f 100-build-with-compose.yml up --build
+#   docker compose -f 100-build-with-compose.yml down --rmi local
+
+services:
+  builder:
+    build:
+      context: ../..
+      dockerfile: build-scripts/zzz-internal/100-run-docker-mendix-buildpack.dockerfile
+    image: testuniqueviolation-builder:temp
+    container_name: testuniqueviolation-builder
+    entrypoint: /bin/bash
+    command: ["/workdir/src/build-scripts/zzz-internal/500-build-mda-dir.sh"]
+    environment:
+      APP_TAG: testuniqueviolation-app
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /workdir
+    tty: true
+    stdin_open: true
