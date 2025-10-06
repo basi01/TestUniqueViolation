@@ -31,6 +31,3 @@ cd "${BPK_DIR:?}"
   # checkout what we fetched
   git -c advice.detachedHead=false checkout "$checkoutarg"
 }
-
-# This must be run with docker-in-docker
-# ./build.py --source "${MPR_DIR:?}" --destination "${MDA_DIR:?}" build-mda-dir

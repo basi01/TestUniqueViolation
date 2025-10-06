@@ -3,7 +3,7 @@ setlocal
 @rem run optional goto command:
 %*
 
-pushd %~dp0 || exit /b 1
+pushd %~dp0..\zzz-internal || exit /b 1
 
 @echo starting the composition and detach...
 call docker compose -f 900-run-compose.yml up --wait || goto :err

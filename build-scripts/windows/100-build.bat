@@ -1,6 +1,7 @@
 setlocal
+@set "PROMPT=.\>"
 
-pushd %~dp0 || exit /b 1
+pushd %~dp0..\zzz-internal || exit /b 1
 
 @rem We expect that only a working docker executable is available. The docker daemon can be in WSL or even on a remote host.
 @rem A builder image with Git and Python necessary to run the build-mda-dir task will be used.
@@ -10,31 +11,28 @@ pushd %~dp0 || exit /b 1
 @rem So we first build the image and then run it with the necessary socket. 
 @rem  
 
-
-set "TAG_SUF=%RANDOM%_%RANDOM%_%RANDOM%_%RANDOM%" || exit /b 1
-set "DOD_TAG=testuniqueviolation-builder:%TAG_SUF%" || exit /b 1
-set "APP_TAG=testuniqueviolation-app" || exit /b 1
+set "TAG_SUF=%RANDOM%_%RANDOM%_%RANDOM%_%RANDOM%"
+set "DOD_TAG=testuniqueviolation-builder:%TAG_SUF%"
+set "APP_TAG=testuniqueviolation-app"
 
 set ERRORLEVEL2=0
 call :create_images || set ERRORLEVEL2=%ERRORLEVEL%
-
 call docker image rm -- "%DOD_TAG%" || echo. >nul
+@echo all ok
+pause
+exit /b %ERRORLEVEL%
 
-@rem endlocal & set ERRORLEVEL2=%ERRORLEVEL2%
-
-exit /b %ERRORLEVEL2%
-
+@rem xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 :create_images
-
-call docker build -t "%DOD_TAG%" -f 100-run-docker-mendix-buildpack.dockerfile .. || exit /b 1
-
+call docker build -t "%DOD_TAG%" -f 100-run-docker-mendix-buildpack.dockerfile ../.. || exit /b 1
 @rem TODO: I only tested it with a regular WSL Ubuntu dockerd, not Docker for Desktop
 call docker run --rm -it ^
   -e "APP_TAG=%APP_TAG%" ^
   --volume /var/run/docker.sock:/var/run/docker.sock ^
   --entrypoint bash ^
-  "%DOD_TAG%" /workdir/src/build-scripts/100-run-docker-mendix-buildpack/500-build-mda-dir.sh || exit /b 1
-
+  "%DOD_TAG%" /workdir/src/build-scripts/zzz-internal/500-build-mda-dir.sh || exit /b 1
+@echo successfully built image: %APP_TAG%
 goto :ennd
+@rem xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 :ennd

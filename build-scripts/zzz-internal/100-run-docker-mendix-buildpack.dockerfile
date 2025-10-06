@@ -12,4 +12,4 @@ ENV MDA_DIR=/workdir/mda
 
 COPY . ${MPR_DIR}
 
-RUN bash "${MPR_DIR}/build-scripts/100-run-docker-mendix-buildpack/100-clone-docker-mendix-buildpack.sh"
+RUN bash "${MPR_DIR}/build-scripts/zzz-internal/100-clone-docker-mendix-buildpack.sh"
