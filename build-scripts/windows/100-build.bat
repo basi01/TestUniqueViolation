@@ -1,8 +1,7 @@
 setlocal
 @set "PROMPT=.\>"
 
-set ERRORLEVEL2=1
-pushd %~dp0..\zzz-internal || goto :err
+pushd %~dp0..\zzz-internal || @goto :no_clean
 
 @rem We expect that only a working docker executable is available. The docker daemon can be in WSL or even on a remote host.
 @rem A builder image with Git and Python necessary to run the build-mda-dir task will be used.
@@ -12,25 +11,31 @@ pushd %~dp0..\zzz-internal || goto :err
 @rem So we first build the image and then run it with the necessary socket. 
 @rem  
 
-set ERRORLEVEL2=0
-call :do_it || set ERRORLEVEL2=%ERRORLEVEL%
+call :do_it
 
+:clean
+set ERRORLEVEL2=%ERRORLEVEL%
 @rem final clean (this resets ERRORLEVEL)
 call docker compose -f 100-build-with-compose.yml down --rmi local || echo. >nul
+@goto :main_exit
 
-:err
+:no_clean
+set ERRORLEVEL2=%ERRORLEVEL%
+
+:main_exit
 echo exiting with %ERRORLEVEL2%
 pause
 exit /b %ERRORLEVEL2%
 
 @rem xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 :do_it
-set BUILDKIT_PROGRESS=plain
+@rem set BUILDPACK_XTRACE=true
+@rem set BUILDKIT_PROGRESS=plain
 @rem do not reuse existing :temp image
-call docker compose -f 100-build-with-compose.yml down --rmi local || goto :ennd
+call docker compose -f 100-build-with-compose.yml down --rmi local || @goto :ennd
 @rem build
-call docker compose -f 100-build-with-compose.yml up --build || goto :ennd
-goto :ennd
+call docker compose -f 100-build-with-compose.yml run --rm --build builder || @goto :ennd
+@goto :ennd
 @rem xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 :ennd

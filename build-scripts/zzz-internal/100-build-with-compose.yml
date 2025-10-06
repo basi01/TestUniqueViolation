@@ -13,7 +13,8 @@ services:
     command: ["/workdir/src/build-scripts/zzz-internal/500-build-mda-dir.sh"]
     environment:
       - APP_TAG=testuniqueviolation-app
-      - BUILDKIT_PROGRESS=$BUILDKIT_PROGRESS
+      - BUILDKIT_PROGRESS=${BUILDKIT_PROGRESS}
+      - BUILDPACK_XTRACE=${BUILDPACK_XTRACE}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     working_dir: /workdir
