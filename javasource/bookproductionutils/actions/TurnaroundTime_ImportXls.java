@@ -18,9 +18,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -34,15 +32,11 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import com.mendix.core.Core;
-import com.mendix.core.CoreException;
 import com.mendix.systemwideinterfaces.core.IContext;
 import com.mendix.systemwideinterfaces.core.IMendixObject;
 import com.mendix.systemwideinterfaces.core.UserAction;
 import com.mendix.systemwideinterfaces.core.UserException;
 import com.mendix.systemwideinterfaces.core.UserException.ExceptionCategory;
-import _sysutils.impl.LambdaUtil.BiFunctionWithExceptions;
-import avatarclient.proxies.LVAItem;
-import avatarclient.proxies.va_production_schedule_task;
 import bookproductionutils.proxies.TurnaroundTimeItem;
 import bookproductionutils.proxies.TurnaroundTimeX;
 
@@ -99,9 +93,6 @@ public class TurnaroundTime_ImportXls extends UserAction<java.util.List<IMendixO
                         + COL_COPYEDITINGCATEGORY);
             }
 
-            final Map<String, va_production_schedule_task> tasksByCode =
-                loadVA(va_production_schedule_task::load);
-
             prodCatsByIndex = LinkedHashMap.newLinkedHashMap(prodCatIndexes.size());
             for (final Integer prodCatColIndex : prodCatIndexes) {
                 final Cell cell = row.getCell(prodCatColIndex);
@@ -120,11 +111,11 @@ public class TurnaroundTime_ImportXls extends UserAction<java.util.List<IMendixO
             final List<IMendixObject> toCommit = new ArrayList<>();
             while (it.hasNext()) {
                 row = it.next();
-                final va_production_schedule_task task = getTask(tasksByCode);
+                final String task2 = getTask2();
                 final String copyEds2 = getCopyEds2();
-                if (task != null && copyEds2 != null) {
+                if (task2 != null && copyEds2 != null) {
                     final TurnaroundTimeX turnaroundTime = new TurnaroundTimeX(context);
-                    turnaroundTime.setTurnaroundTimeX_va_production_schedule_task(task);
+                    turnaroundTime.setTaskCode(task2);
                     turnaroundTime.setPrettyCopyEds(copyEds2);
                     createItems(turnaroundTime);
                     toCommit.add(turnaroundTime.getMendixObject());
@@ -168,43 +159,11 @@ public class TurnaroundTime_ImportXls extends UserAction<java.util.List<IMendixO
 
     private Row row;
 
-    private <T extends LVAItem> Map<String, T> loadVA(
-            final BiFunctionWithExceptions<IContext, String, List<T>, CoreException> loadFunc1)
-                                                                                                throws CoreException {
-        final List<T> all_va_production_schedule_task = loadFunc1.apply(context, "");
-
-        final Map<String, T> tasksByCode =
-            all_va_production_schedule_task
-                .stream()
-                .collect(Collectors.toMap(x -> x.getCode(), Function.identity()));
-        return tasksByCode;
-    }
-
-    private <T extends LVAItem> T getVA(
-            final Cell cell,
-            final Map<String, T> vaByCodeMap,
-            final String entityname,
-            final boolean ignoreEmpty) throws Exception {
-        final String code = str1(cell);
-        if (code.isEmpty() && ignoreEmpty) {
-            return null;
-        }
-        final T va = vaByCodeMap.get(code);
-        if (va == null) {
-            throw new UserException(
-                ExceptionCategory.Custom,
-                "Cell " + cell.getAddress() + " contains unknown " + entityname + " code: " + code);
-        }
-        return va;
-    }
-
-    private va_production_schedule_task getTask(
-            final Map<String, va_production_schedule_task> tasksByCode) throws Exception {
+    private String getTask2() throws Exception {
         final Cell cellTask = getCell(COL_TASK);
-        final va_production_schedule_task task =
-            getVA(cellTask, tasksByCode, va_production_schedule_task.entityName, true);
+        final String code = str1(cellTask);
         mCell = null;
-        return task;
+        return code.isEmpty() ? null : code;
     }
 
     private String getCopyEds2() throws Exception {
