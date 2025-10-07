@@ -13,15 +13,24 @@ services:
     mem_limit: 2g
     networks:
       - testuniqueviolation-net
-
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready && psql -U "testuniqueviolation" -d "testuniqueviolation" -tAc 'SELECT 1'
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 3s
+  
   app0:
     image: testuniqueviolation-app
     container_name: testuniqueviolation-app-0
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
       CF_INSTANCE_INDEX: 0
-      ADMIN_PASSWORD: n0t-A-s3cRet
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       DATABASE_ENDPOINT: postgres://testuniqueviolation:testuniqueviolation@postgres/testuniqueviolation
       JAVA_OPTS: >-
         [
@@ -37,12 +46,14 @@ services:
       interval: 5s
       timeout: 2s
       retries: 50
+      start_period: 5s
 
   app1:
     image: testuniqueviolation-app
     container_name: testuniqueviolation-app-1
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
       CF_INSTANCE_INDEX: 1
       ADMIN_PASSWORD: n0t-A-s3cRet
@@ -61,6 +72,7 @@ services:
       interval: 5s
       timeout: 2s
       retries: 50
+      start_period: 5s
 
   proxy:
     image: alpine/socat
@@ -75,12 +87,14 @@ services:
         echo 'Use `docker attach testuniqueviolation-portproxy` to gain control';
         set -ex -o pipefail;
         setsid socat tcp-listen:8080,fork,reuseaddr tcp-connect:app0:8080 &
+        echo;
         read -n 1 -s -r -p"press any key to switch" x;
         echo;
         kill -KILL -$!;
         wait || true;
         echo 'Switching to app1';
         setsid socat tcp-listen:8080,fork,reuseaddr tcp-connect:app1:8080 &
+        echo;
         read -n 1 -s -r -p"press any key to exit" x;
         echo;
         kill -KILL -$!;

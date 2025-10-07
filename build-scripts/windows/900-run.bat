@@ -4,6 +4,8 @@ setlocal
 @rem run optional goto command:
 %*
 
+@set "ADMIN_PASSWORD=n0t-A-s3cRet"
+
 pushd %~dp0..\zzz-internal || @goto :no_clean
 
 call :do_it
@@ -30,9 +32,10 @@ call docker compose -f 900-run-compose.yml up --wait || @goto :ennd
 start /MIN cmd /c "%~f0" goto :start_docker_compose_logs
 @echo opening browser via socat proxy...
 start "" "http://localhost:4078"
+@echo You may attach a java debugger at ports 4076 and 4077
 @echo Interactive proxy ready. You can launch http://localhost:4078 in your browser.
 @echo Logs are opened in a separate window
-@echo MxAdmin password: n0t-A-s3cRet
+@echo MxAdmin password: %ADMIN_PASSWORD%
 @echo press any key to switch from app0 to app1
 @call docker attach testuniqueviolation-portproxy || @goto :ennd
 @goto :ennd
