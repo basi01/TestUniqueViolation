@@ -115,8 +115,6 @@ public class TurnaroundTime_ImportXls extends UserAction<java.util.List<IMendixO
                 final String copyEds2 = getCopyEds2();
                 if (task2 != null && copyEds2 != null) {
                     final TurnaroundTimeX turnaroundTime = new TurnaroundTimeX(context);
-                    turnaroundTime.setTaskCode(task2);
-                    turnaroundTime.setPrettyCopyEds(copyEds2);
                     turnaroundTime.set_TaskAndCopyEds(task2 + ";" + copyEds2 + ";");
                     createItems(turnaroundTime);
                     toCommit.add(turnaroundTime.getMendixObject());
