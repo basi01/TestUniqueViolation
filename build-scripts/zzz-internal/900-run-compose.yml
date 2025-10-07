@@ -23,8 +23,13 @@ services:
       CF_INSTANCE_INDEX: 0
       ADMIN_PASSWORD: n0t-A-s3cRet
       DATABASE_ENDPOINT: postgres://testuniqueviolation:testuniqueviolation@postgres/testuniqueviolation
+      JAVA_OPTS: >-
+        [
+          "-Xrunjdwp:transport=dt_socket,address=0.0.0.0:8787,server=y,suspend=n"
+        ]
     ports:
       - "4080:8080"
+      - "4076:8787"
     networks:
       - testuniqueviolation-net
     healthcheck:
@@ -42,8 +47,13 @@ services:
       CF_INSTANCE_INDEX: 1
       ADMIN_PASSWORD: n0t-A-s3cRet
       DATABASE_ENDPOINT: postgres://testuniqueviolation:testuniqueviolation@postgres/testuniqueviolation
+      JAVA_OPTS: >-
+        [
+          "-Xrunjdwp:transport=dt_socket,address=0.0.0.0:8787,server=y,suspend=n"
+        ]
     ports:
       - "4081:8080"
+      - "4077:8787"
     networks:
       - testuniqueviolation-net
     healthcheck:
