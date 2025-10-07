@@ -6,6 +6,8 @@ setlocal
 
 @set "ADMIN_PASSWORD=n0t-A-s3cRet"
 
+@set "sleepcommand=ping >nul 127.0.0.1 -w 1 -n"
+
 pushd %~dp0..\zzz-internal || @goto :no_clean
 
 call :do_it
@@ -26,10 +28,10 @@ exit /b %ERRORLEVEL2%
 
 @rem xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 :do_it
-@echo starting the composition and detach...
-call docker compose -f 900-run-compose.yml up --wait || @goto :ennd
 @echo following the logs in a separate window...
 start /MIN cmd /c "%~f0" goto :start_docker_compose_logs
+@echo starting the composition and detach...
+call docker compose -f 900-run-compose.yml up --wait || @goto :ennd
 @echo opening browser via socat proxy...
 start "" "http://localhost:4078"
 @echo You may attach a java debugger at ports 4076 and 4077
@@ -43,6 +45,8 @@ start "" "http://localhost:4078"
 
 @rem xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 :start_docker_compose_logs
+@rem give the parent some time to create the composition
+%sleepcommand% 5
 call docker compose -f 900-run-compose.yml logs -f
 pause
 @goto :ennd
