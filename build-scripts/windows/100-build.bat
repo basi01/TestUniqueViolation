@@ -24,7 +24,7 @@ set ERRORLEVEL2=%ERRORLEVEL%
 
 :main_exit
 echo exiting with %ERRORLEVEL2%
-pause
+%OPT_PAUSE% pause
 exit /b %ERRORLEVEL2%
 
 @rem xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx

@@ -19,7 +19,7 @@ set ERRORLEVEL2=%ERRORLEVEL%
 
 :main_exit
 echo exiting with %ERRORLEVEL2%
-pause
+%OPT_PAUSE% pause
 exit /b %ERRORLEVEL2%
 
 @rem xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -31,6 +31,7 @@ start /MIN cmd /c "%~f0" goto :start_docker_compose_logs
 @echo opening browser via socat proxy...
 start "" "http://localhost:4078"
 @echo Interactive proxy ready. You can launch http://localhost:4078 in your browser.
+@echo Logs are opened in a separate window
 @echo MxAdmin password: n0t-A-s3cRet
 @echo press any key to switch from app0 to app1
 @call docker attach testuniqueviolation-portproxy || @goto :ennd
