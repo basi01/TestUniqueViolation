@@ -4,6 +4,8 @@
 
 services:
   builder:
+    # join the default bridge network
+    network_mode: bridge
     build:
       context: ../..
       dockerfile: build-scripts/zzz-internal/100-run-docker-mendix-buildpack.dockerfile
