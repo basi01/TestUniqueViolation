@@ -6,7 +6,7 @@ setlocal
 
 @set "ADMIN_PASSWORD=n0t-A-s3cRet"
 
-@set "sleepcommand=ping >nul 127.0.0.1 -w 1 -n"
+@set "sleepcommand=@ping >nul 127.0.0.1 -w 1 -n"
 
 pushd %~dp0..\zzz-internal || @goto :no_clean
 
@@ -28,7 +28,7 @@ exit /b %ERRORLEVEL2%
 
 @rem xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 :do_it
-@echo following the logs in a separate window...
+@echo following the logs in a separate console window...
 start /MIN cmd /c "%~f0" goto :start_docker_compose_logs
 @echo starting the composition and detach...
 call docker compose -f 900-run-compose.yml up --wait || @goto :ennd
